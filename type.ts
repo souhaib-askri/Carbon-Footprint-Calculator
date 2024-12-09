@@ -15,3 +15,15 @@ interface dataType {
         bg: "bg-x-500"
     }
 }[]
+
+const answer = [
+    {
+        idCategory: "",
+        idQuestion: "",
+        value: {
+            number: 50,
+            select: "idSelect",
+            mutliSelect: ["isSelect1", "idSelect2"]
+        } //id
+    }
+]
