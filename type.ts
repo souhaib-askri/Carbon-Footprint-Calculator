@@ -24,6 +24,6 @@ const answer = [
             number: 50,
             select: "idSelect",
             mutliSelect: ["isSelect1", "idSelect2"]
-        } //id
+        } //if
     }
 ]
