@@ -23,17 +23,53 @@ export default function page() {
         });
     };
 
+    const isCurrentSectionComplete = () => {
+        const currentQuestions = data[selectedScene].question;
+        const currentAnswers = answers.filter(
+            (answer) => answer.idCategory === data[selectedScene].name
+        );
+
+        return currentQuestions.every((question) => {
+            const answer = currentAnswers.find((a) => a.idQuestion === question.question);
+            if (!answer) return false;
+
+            // Check if the answer has a valid value based on its type
+            switch (question.type) {
+                case 'select':
+                    return answer.value.select !== '';
+                case 'mutli-select':
+                    return answer.value.mutliSelect && answer.value.mutliSelect.length > 0;
+                case 'number':
+                    return answer.value.number !== null && answer.value.number !== undefined;
+                default:
+                    return false;
+            }
+        });
+    };
+
+    const handleNext = () => {
+        if (selectedScene < data.length - 1) {
+            setSelectedScene(selectedScene + 1);
+        }
+    };
+
+    const handlePrevious = () => {
+        if (selectedScene > 0) {
+            setSelectedScene(selectedScene - 1);
+        }
+    };
+
     return (
-        <div className="h-screen w-screen">
+        <div className="min-h-screen w-full bg-background flex flex-col">
             {/* Categories Section */}
-            <div className="w-full">
-                <div className="w-full flex p-5">
-                    <div className="mx-auto items-center justify-center flex gap-7">
+            <div className="w-full sticky top-0 bg-background z-10 shadow-sm">
+                <div className="w-full p-3 md:p-5">
+                    <div className="mx-auto items-center justify-center flex flex-wrap gap-4 md:gap-7">
                         {data.map((v, index) => (
                             <div key={index} onClick={() => setSelectedScene(index)} className="cursor-pointer">
                                 <div
                                     className={cn(
-                                        "flex gap-2 text-foreground/60 px-3 rounded text-sm font-semibold",
+                                        "flex items-center gap-2 text-foreground/60 px-3 py-2 rounded text-sm font-semibold transition-all duration-200 hover:opacity-80",
                                         selectedScene === index && v.extra.bg
                                     )}
                                 >
@@ -42,7 +78,7 @@ export default function page() {
                                 <div
                                     className={cn(
                                         selectedScene === index ? v.extra.bg : "bg-gray-300",
-                                        "w-full mx-auto h-1 mt-2 rounded-full"
+                                        "w-full mx-auto h-1 mt-2 rounded-full transition-all duration-200"
                                     )}
                                 ></div>
                             </div>
@@ -52,25 +88,24 @@ export default function page() {
             </div>
 
             {/* Questions Section */}
-            <div className="w-full h-96 bg-lime-500 overflow-auto">
-                {/* <img
-                    src="https://cdn.pixabay.com/photo/2020/03/14/17/01/flowers-4931217_960_720.png"
-                    alt="Background"
-                    className="h-full fixed left-0 bottom-0"
-                />
-                <img
-                    src="https://cdn.pixabay.com/photo/2016/04/02/21/01/earth-1303628_960_720.png"
-                    alt="Earth"
-                    className="h-96 fixed top-0 right-0"
-                /> */}
-                <div className="p-10 mx-auto max-w-3xl h-96">
-                    <div className="py-10">
+            <div className={cn(
+                "flex-1 w-full overflow-auto",
+                "bg-gradient-to-b",
+                data[selectedScene].extra.bg,
+                data[selectedScene].extra.bg.replace('bg-', 'from-'),
+                data[selectedScene].extra.bg.replace('500', '600').replace('bg-', 'to-')
+            )}>
+                <div className="container mx-auto px-4 py-6 md:py-10">
+                    <div className="max-w-3xl mx-auto bg-white/10 backdrop-blur-sm rounded-lg shadow-lg p-6 md:p-10">
                         {data[selectedScene].question.map((q) => (
-                            <div key={q.question} className="mb-6">
-                                <h1 className="text-xl font-semibold text-background mb-2">{q.question}</h1>
+                            <div key={q.question} className="mb-8">
+                                <h1 className="text-lg md:text-xl font-semibold text-background mb-2">{q.question}</h1>
+                                {q.note && (
+                                    <p className="text-sm text-background/80 mb-3 italic">{q.note}</p>
+                                )}
                                 {q.type === "select" && (
                                     <select
-                                        className="w-full bg-background border p-2 rounded text-foreground"
+                                        className="w-full bg-background/90 border border-background/20 p-3 rounded-lg text-foreground focus:ring-2 focus:ring-lime-300 focus:border-transparent transition-all duration-200"
                                         placeholder={q.placeholder}
                                         onChange={(e) =>
                                             handleInputChange(
@@ -89,18 +124,18 @@ export default function page() {
                                     </select>
                                 )}
                                 {q.type === "mutli-select" && (
-                                    <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-3">
                                         {q.options?.map((o, index) => (
-                                            <label key={index} className="flex items-center gap-2">
+                                            <label key={index} className="flex items-center gap-2 bg-background/90 px-4 py-2 rounded-lg cursor-pointer hover:bg-background/95 transition-all duration-200">
                                                 <input
                                                     type="checkbox"
-                                                    className="form-checkbox text-background"
+                                                    className="form-checkbox text-lime-500 rounded"
                                                     onChange={(e) => {
                                                         const selected = answers.find(
                                                             (a) =>
                                                                 a.idCategory === data[selectedScene].name &&
                                                                 a.idQuestion === q.question
-                                                        )?.value.mutliSelect || [];
+                                                        )?.value?.mutliSelect || [];
                                                         if (e.target.checked) {
                                                             handleInputChange(data[selectedScene].name, q.question, {
                                                                 mutliSelect: [...selected, o.value],
@@ -112,7 +147,7 @@ export default function page() {
                                                         }
                                                     }}
                                                 />
-                                                {o.text}
+                                                <span className="text-foreground">{o.text}</span>
                                             </label>
                                         ))}
                                     </div>
@@ -120,7 +155,7 @@ export default function page() {
                                 {q.type === "number" && (
                                     <input
                                         type="number"
-                                        className="w-full bg-background border p-2 rounded text-foreground"
+                                        className="w-full bg-background/90 border border-background/20 p-3 rounded-lg text-foreground focus:ring-2 focus:ring-lime-300 focus:border-transparent transition-all duration-200"
                                         placeholder={q.placeholder}
                                         onChange={(e) =>
                                             handleInputChange(
@@ -136,10 +171,39 @@ export default function page() {
                     </div>
                 </div>
             </div>
+
+            {/* Navigation Buttons */}
+            <div className="sticky bottom-0 w-full bg-background/80 backdrop-blur-sm p-4 shadow-lg">
+                <div className="container mx-auto max-w-3xl flex justify-between gap-4">
+                    <button
+                        onClick={handlePrevious}
+                        disabled={selectedScene === 0}
+                        className={cn(
+                            "px-6 py-2 rounded-lg font-semibold transition-all duration-200",
+                            selectedScene === 0
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : "bg-gray-500 text-white hover:bg-gray-600"
+                        )}
+                    >
+                        Previous
+                    </button>
+                    <button
+                        onClick={handleNext}
+                        disabled={!isCurrentSectionComplete() || selectedScene === data.length - 1}
+                        className={cn(
+                            "px-6 py-2 rounded-lg font-semibold transition-all duration-200",
+                            !isCurrentSectionComplete() || selectedScene === data.length - 1
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : data[selectedScene].extra.bg + " text-white hover:opacity-90"
+                        )}
+                    >
+                        Next
+                    </button>
+                </div>
+            </div>
         </div>
     )
 }
-
 
 const data = [
     {
